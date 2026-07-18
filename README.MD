@@ -12,6 +12,7 @@ browser, and Opera.
   - [Demo](#demo)
   - [Install](#install)
   - [Development](#development)
+  - [Releasing (maintainers)](#releasing-maintainers)
   - [Getting started](#getting-started)
   - [Additional notes](#additional-notes)
   - [FAQ](#faq)
@@ -87,8 +88,36 @@ built from `rollup.config.dev.js`) that you can load directly:
 `npm run lint` runs eslint over `src/`. A GitHub Actions workflow
 (`.github/workflows/ci.yml`) runs the same lint plus a production build on
 every push/PR as a smoke test; `.github/workflows/release.yml` builds and
-attaches the release zips to a GitHub Release whenever a `v*` tag is
-pushed (store submission itself remains manual).
+attaches the release zips to a GitHub Release whenever `manifest.json`'s
+version is bumped and pushed to `master` (or run manually from the Actions
+tab) - see [Releasing](#releasing-maintainers) below. Store submission
+itself remains manual.
+
+## Releasing (maintainers)
+
+Releases are driven entirely by `manifest.json`'s `version` field - not
+`package.json`'s (that one drifts independently and isn't what the browser
+stores read) - no manual tagging needed.
+
+1. Bump `version` in `manifest.json` and merge that change to `master`
+   (normal PR, same as any other change). This is the same commit that
+   precedes a real Chrome Web Store / AMO submission, so the release this
+   produces lines up with what actually ships to the stores.
+2. [`.github/workflows/release.yml`](.github/workflows/release.yml)
+   triggers on any push to `master` that touches `manifest.json` (or can be
+   run on demand via the Actions tab's "Run workflow" button):
+   - `check` job reads the version from `manifest.json` and checks via
+     `gh release view` whether `v<version>` already has a release.
+   - `build` job (skipped if that release already exists) runs
+     `build-extension.sh` and attaches both zips
+     (`singlefile-extension-source.zip`, `singlefile-extension-firefox.zip`)
+     to a GitHub Release tagged `v<version>`, creating the tag if needed.
+3. Pushing to `master` without changing `manifest.json`'s version does
+   nothing (the existing-release check short-circuits before anything
+   builds), so routine commits don't trigger spurious releases.
+4. This automates building and publishing the release zips only - actually
+   submitting the built extension to the Chrome Web Store / AMO / other
+   stores for review is still a manual step, same as today.
 
 ## Getting started
 
