@@ -3,9 +3,12 @@ name: Release
 # Builds the extension and attaches the two artifacts build-extension.sh
 # already produces (singlefile-extension-source.zip,
 # singlefile-extension-firefox.zip) to a GitHub Release whenever a version
-# tag is pushed. It does NOT submit to any browser store - Chrome Web
-# Store / addons.mozilla.org both require a human to walk through their own
-# review flow, and doing that from CI would mean storing store-publishing
+# tag is pushed, or on demand via the Actions tab's "Run workflow" button
+# (only appears once this file is on the default branch - GitHub doesn't
+# expose workflow_dispatch for workflows that only exist on a PR branch).
+# It does NOT submit to any browser store - Chrome Web Store /
+# addons.mozilla.org both require a human to walk through their own review
+# flow, and doing that from CI would mean storing store-publishing
 # credentials as repo secrets, which nothing here currently has. This
 # automates the "build the zips" half of a release; uploading to the stores
 # stays a manual step, same as it is today.
@@ -14,6 +17,11 @@ on:
   push:
     tags:
       - "v*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag (e.g. v1.2.1) - created automatically if it doesn't already exist"
+        required: true
 
 # action-gh-release needs write access to create/update the release and
 # upload assets - the default GITHUB_TOKEN permissions can be read-only
@@ -35,6 +43,15 @@ jobs:
       - name: Attach zips to the GitHub Release
         uses: softprops/action-gh-release@v3
         with:
+          # On a tag push, github.ref_name is the tag itself. On a manual
+          # run, there's no tag ref at all - use the tag typed into the
+          # "Run workflow" form instead. Pinning target_commitish to the
+          # exact commit that was actually built (rather than letting it
+          # default to "whatever the default branch's HEAD is by the time
+          # this finishes") keeps the release the same distinct choice of
+          # source either trigger produces.
+          tag_name: ${{ inputs.tag || github.ref_name }}
+          target_commitish: ${{ github.sha }}
           files: |
             singlefile-extension-source.zip
             singlefile-extension-firefox.zip
