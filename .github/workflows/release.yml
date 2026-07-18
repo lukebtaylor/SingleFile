@@ -15,19 +15,25 @@ on:
     tags:
       - "v*"
 
+# action-gh-release needs write access to create/update the release and
+# upload assets - the default GITHUB_TOKEN permissions can be read-only
+# depending on repo/org settings, so this has to be explicit.
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v6
         with:
           node-version: 20
           cache: npm
       - name: Build
         run: ./build-extension.sh
       - name: Attach zips to the GitHub Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           files: |
             singlefile-extension-source.zip
