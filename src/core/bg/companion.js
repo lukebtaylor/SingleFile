@@ -47,11 +47,18 @@ async function externalSave(pageData) {
 			pageData
 		});
 	} catch (error) {
+		// DEBUG: sendNativeMessage only reports success/failure via this
+		// error's .message text - log the raw error and whether the
+		// "Native host has exited" tolerance below actually matched it, so a
+		// misleading "unexpected error" banner can be traced back to what
+		// the browser/OS actually said instead of guessing.
+		console.error("SingleFile debug (Companion externalSave): sendNativeMessage rejected -", error, "- tolerated as clean exit:", Boolean(error.message && error.message.includes("Native host has exited"))); // eslint-disable-line no-console
 		if (!error.message || !error.message.includes("Native host has exited")) {
 			throw error;
 		}
 	}
 	if (response && response.error) {
+		console.error("SingleFile debug (Companion externalSave): host responded with an error -", response.error); // eslint-disable-line no-console
 		throw new Error(response.error + " (Companion)");
 	}
 }
@@ -64,11 +71,14 @@ async function save(pageData) {
 			pageData
 		});
 	} catch (error) {
+		// DEBUG: see comment in externalSave() above - same reasoning.
+		console.error("SingleFile debug (Companion save): sendNativeMessage rejected -", error, "- tolerated as clean exit:", Boolean(error.message && error.message.includes("Native host has exited"))); // eslint-disable-line no-console
 		if (!error.message || !error.message.includes("Native host has exited")) {
 			throw error;
 		}
 	}
 	if (response && response.error) {
+		console.error("SingleFile debug (Companion save): host responded with an error -", response.error); // eslint-disable-line no-console
 		throw new Error(response.error + " (Companion)");
 	}
 }
