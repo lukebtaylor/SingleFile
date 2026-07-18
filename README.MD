@@ -11,6 +11,7 @@ browser, and Opera.
   - [Table of Contents](#table-of-contents)
   - [Demo](#demo)
   - [Install](#install)
+  - [Development](#development)
   - [Getting started](#getting-started)
   - [Additional notes](#additional-notes)
   - [FAQ](#faq)
@@ -51,7 +52,44 @@ these instructions:
 - Firefox: https://extensionworkshop.com/documentation/develop/temporary-installation-in-firefox
 - Chrome and Microsoft Edge: https://github.com/gildas-lormeau/SingleFile-MV3
 - Safari: https://github.com/gildas-lormeau/SingleFile-Safari-Extension
-  
+
+## Development
+
+This repo builds via [Rollup](https://rollupjs.org) and has no CI/CD-driven
+release process - `npm run build` (which runs `build-extension.sh`) is what
+produces the zips attached to
+[GitHub Releases](https://github.com/gildas-lormeau/SingleFile/releases),
+and a maintainer uploads those to the browser stores by hand after review.
+Note this repo targets `manifest_version: 2` (Firefox-first); the
+Chrome/Edge (MV3) build lives in a separate repo,
+[SingleFile-MV3](https://github.com/gildas-lormeau/SingleFile-MV3).
+
+To iterate on the extension locally without touching the release build's
+`lib/` output:
+
+```sh
+npm install
+npm run dev        # one-shot build into dev/
+npm run dev:watch   # rebuild dev/lib whenever source changes
+npm run dev:run      # build, launch Firefox with dev/ loaded, and
+                      # live-reload it on every change (via web-ext)
+```
+
+All three set up a self-contained `dev/` folder (symlinked to
+`manifest.json`, `_locales`, and `src`, with its own unminified `lib/`
+built from `rollup.config.dev.js`) that you can load directly:
+
+- Firefox: `about:debugging#/runtime/this-firefox` -> Load Temporary Add-on
+  -> select `dev/manifest.json`
+- Chrome/Edge: `chrome://extensions` -> enable Developer mode -> Load
+  unpacked -> select `dev/` (subject to the MV2 caveat above)
+
+`npm run lint` runs eslint over `src/`. A GitHub Actions workflow
+(`.github/workflows/ci.yml`) runs the same lint plus a production build on
+every push/PR as a smoke test; `.github/workflows/release.yml` builds and
+attaches the release zips to a GitHub Release whenever a `v*` tag is
+pushed (store submission itself remains manual).
+
 ## Getting started
 
 - Click on the SingleFile button in the extension toolbar to save the page.
