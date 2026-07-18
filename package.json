@@ -5,8 +5,11 @@
 	"author": "Gildas Lormeau",
 	"license": "AGPL-3.0-or-later",
 	"scripts": {
-		"dev": "npx rollup -c rollup.config.dev.js",
-		"build": "./build-extension.sh"
+		"dev": "scripts/install-dev.sh",
+		"dev:watch": "scripts/install-dev.sh --watch",
+		"dev:run": "scripts/install-dev.sh --run",
+		"build": "./build-extension.sh",
+		"lint": "eslint src"
 	},
 	"type": "module",
 	"dependencies": {
@@ -16,7 +19,8 @@
 		"eslint": "^10.0.0",
 		"@rollup/plugin-node-resolve": "16.0.3",
 		"@rollup/plugin-terser": "0.4.4",
-		"rollup": "^4.57.1"
+		"rollup": "^4.57.1",
+		"web-ext": "^8.9.0"
 	},
 	"overrides": {
 		"terser": "^5.15.0"
