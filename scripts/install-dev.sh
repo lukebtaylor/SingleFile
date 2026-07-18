@@ -23,6 +23,10 @@ set -euo pipefail
 #                        just automatic. Targets Firefox because this repo
 #                        is manifest_version 2; see the README for why
 #                        Chrome/Edge use a separate MV3 build.
+#
+# --run uses `npx web-ext`, not a pinned devDependency - npx fetches it on
+# demand the first time you use --run. `npm install --save-dev web-ext` if
+# you'd rather have it pinned in package.json/package-lock.json.
 
 repo_root="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$repo_root"
