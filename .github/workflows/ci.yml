@@ -1,0 +1,37 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      # Non-blocking: this repo didn't have eslint wired into CI before, so
+      # there's no verified baseline confirming the existing source is
+      # currently 100% clean against eslint.config.mjs's rules. Surface
+      # violations without failing the build until that baseline is
+      # confirmed - flip this to a hard failure once a clean run is seen.
+      - run: npm run lint
+        continue-on-error: true
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npx rollup -c rollup.config.js
+      - run: test -f lib/single-file-extension-background.js
