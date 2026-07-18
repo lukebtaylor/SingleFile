@@ -134,8 +134,19 @@ async function downloadTabPage(message, tab) {
 				message.content = await (await fetch(message.blobURL)).text();
 				await downloadContent([message.content], tab, tab.incognito, message);
 			}
-			// eslint-disable-next-line no-unused-vars
 		} catch (error) {
+			// DEBUG: this used to be silently discarded (see the removed
+			// eslint-disable for the then-unused `error` binding). fetching
+			// message.blobURL here is exactly where Firefox's cross-context
+			// blob: restriction bites (background page fetching a blob:
+			// URL created in the content script - see Mozilla Bugzilla
+			// #1696174, #1369146, #1271345), and content.js silently falls
+			// back to re-sending the content directly when this returns
+			// { error: true } - so the underlying reason a save "half
+			// failed" has never actually been visible anywhere. Logging it
+			// here means the real DOMException/message shows up in this
+			// background page's console instead of only a boolean.
+			console.error("SingleFile debug: fetching message.blobURL failed, falling back -", error, "- filename:", message.filename, "saveWithCompanion:", message.saveWithCompanion); // eslint-disable-line no-console
 			return { error: true };
 		}
 	} else if (message.compressContent) {
@@ -276,7 +287,23 @@ async function downloadContent(contents, tab, incognito, message) {
 		}
 	} catch (error) {
 		if (!error.message || error.message != "upload_cancelled") {
-			console.error(error); // eslint-disable-line no-console
+			// DEBUG: this try block covers every save destination
+			// (Companion, WebDAV, GDrive, GitHub, MCP, S3, RestFormApi,
+			// plain download...) - logging which one was active makes it
+			// possible to tell from the console alone whether a given
+			// error actually came from the Companion path or from
+			// something else entirely.
+			console.error("SingleFile debug: save failed -", error, "- active destination:", {
+				saveWithCompanion: message.saveWithCompanion,
+				saveWithWebDAV: message.saveWithWebDAV,
+				saveWithMCP: message.saveWithMCP,
+				saveToGDrive: message.saveToGDrive,
+				saveToDropbox: message.saveToDropbox,
+				saveToGitHub: message.saveToGitHub,
+				saveToRestFormApi: message.saveToRestFormApi,
+				saveToS3: message.saveToS3,
+				filename: message.filename
+			}); // eslint-disable-line no-console
 			ui.onError(tabId, error.message, error.link);
 		}
 	} finally {
@@ -411,7 +438,23 @@ async function downloadCompressedContent(message, tab) {
 		}
 	} catch (error) {
 		if (!error.message || error.message != "upload_cancelled") {
-			console.error(error); // eslint-disable-line no-console
+			// DEBUG: this try block covers every save destination
+			// (Companion, WebDAV, GDrive, GitHub, MCP, S3, RestFormApi,
+			// plain download...) - logging which one was active makes it
+			// possible to tell from the console alone whether a given
+			// error actually came from the Companion path or from
+			// something else entirely.
+			console.error("SingleFile debug: save failed -", error, "- active destination:", {
+				saveWithCompanion: message.saveWithCompanion,
+				saveWithWebDAV: message.saveWithWebDAV,
+				saveWithMCP: message.saveWithMCP,
+				saveToGDrive: message.saveToGDrive,
+				saveToDropbox: message.saveToDropbox,
+				saveToGitHub: message.saveToGitHub,
+				saveToRestFormApi: message.saveToRestFormApi,
+				saveToS3: message.saveToS3,
+				filename: message.filename
+			}); // eslint-disable-line no-console
 			ui.onError(tabId, error.message, error.link);
 		}
 	} finally {
